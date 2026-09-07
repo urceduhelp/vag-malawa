@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>වචන කෝෂය</title>
+<title>විෂයානුබද්ධ වාග්මාලාව</title>
 <style>
   :root{
     --ink:#16302B;
@@ -107,16 +107,13 @@
   .search-wrap button:hover{ background:var(--gold-soft); }
 
   .suggest-dropdown{
-    position:absolute;
-    top:calc(100% + 8px);
-    left:0;
-    right:74px;
-    background:var(--parchment-raised);
+    position:fixed;
+    background:#FFFFFF;
     border-radius:10px;
     box-shadow:0 16px 40px rgba(14,33,29,0.35);
     display:none;
     overflow:hidden;
-    z-index:40;
+    z-index:200;
     opacity:0;
     transform:translateY(-4px);
     transition: opacity 0.15s ease, transform 0.15s ease;
@@ -126,33 +123,31 @@
   .suggest-item{
     display:block;
     width:100%;
-    text-align:right;
     padding:11px 16px;
     border:none;
-    background:transparent;
-    border-bottom:1px solid var(--line);
+    background:#FFFFFF;
+    border-bottom:1px solid #EAEAEA;
     cursor:pointer;
     text-align:left;
   }
   .suggest-item:last-child{ border-bottom:none; }
-  .suggest-item:hover, .suggest-item.active{ background:var(--parchment); }
-  .suggest-item .sw{ font-size:15px; font-weight:700; color:var(--ink); font-family:Georgia,"Noto Serif Sinhala",serif; }
-  .suggest-item .sc{ font-size:11px; color:var(--clay); margin-left:8px; }
-  .suggest-item .sm{ font-size:12.5px; color:var(--text-soft); margin-top:2px; }
-  .suggest-empty{ padding:16px; font-size:13px; color:var(--text-soft); text-align:center; }
+  .suggest-item:hover, .suggest-item.active{ background:#F2F2F2; }
+  .suggest-item .sw{ font-size:15px; font-weight:700; color:#1A1A1A; font-family:Georgia,"Noto Serif Sinhala",serif; }
+  .suggest-item .sc{ font-size:11px; color:#8A8A8A; margin-left:8px; }
+  .suggest-empty{ padding:16px; font-size:13px; color:#8A8A8A; text-align:center; background:#FFFFFF; }
   .suggest-footer{
     display:block;
     width:100%;
     padding:10px 16px;
     border:none;
-    background:var(--parchment);
-    color:var(--clay);
+    background:#F5F5F5;
+    color:#4A4A4A;
     font-size:12.5px;
     font-weight:600;
     cursor:pointer;
     text-align:center;
   }
-  .suggest-footer:hover{ background:var(--line); }
+  .suggest-footer:hover{ background:#E9E9E9; }
 
   .stats-line{
     margin-top:22px;
@@ -333,14 +328,14 @@
   <div class="hero">
     <div class="hero-inner">
       <span class="hero-eyebrow ui">කලාපීය ගුරු එකමුතුව-කොළඹ</span>
-      <h1>ඉතිහාසය වාග් කෝෂය</h1>
+      <h1>විෂයානුබද්ධ වාග් මාලාව</h1>
       <p class="lead ui">විෂයානුබද්ධ වචන, ඒවායේ අර්ථ සහ මූලාශ්‍ර එකම තැනකින් සොයාගන්න.</p>
       <div class="search-wrap">
         <input class="ui" type="search" id="searchInput" placeholder="වචනයක් හෝ අර්ථයක් ටයිප් කරන්න...">
         <button class="ui" id="randomBtn" type="button">අහඹු වචනයක්</button>
-        <div class="suggest-dropdown ui" id="suggestDropdown">
-          <div class="suggest-list" id="suggestList"></div>
-        </div>
+      </div>
+      <div class="suggest-dropdown ui" id="suggestDropdown">
+        <div class="suggest-list" id="suggestList"></div>
       </div>
       <div class="stats-line ui" id="statsLine"></div>
     </div>
@@ -364,7 +359,7 @@
     <div id="listArea"><div class="loading ui">පූරණය වෙමින්...</div></div>
   </main>
 
-  <footer class="ui">තාක්ෂණය සහ නවෝත්පාදනය සඳහා වූ ගුරු සංගමය <br> (Teachers' Alliance for Technology and Innovation)</footer>
+  <footer class="ui">වචන කෝෂය</footer>
 
 <script>
 (function(){
@@ -447,12 +442,29 @@
   });
 
   document.addEventListener("click", (ev) => {
-    if(!ev.target.closest(".search-wrap")){
+    if(!ev.target.closest(".search-wrap") && !ev.target.closest(".suggest-dropdown")){
       closeSuggestions();
     }
   });
 
-  function openSuggestions(){ $("suggestDropdown").classList.add("open"); }
+  function positionSuggestDropdown(){
+    const rect = $("searchInput").closest(".search-wrap").getBoundingClientRect();
+    const dd = $("suggestDropdown");
+    dd.style.top = (rect.bottom + 8) + "px";
+    dd.style.left = rect.left + "px";
+    dd.style.width = rect.width + "px";
+  }
+  window.addEventListener("resize", () => {
+    if($("suggestDropdown").classList.contains("open")) positionSuggestDropdown();
+  });
+  window.addEventListener("scroll", () => {
+    if($("suggestDropdown").classList.contains("open")) positionSuggestDropdown();
+  }, { passive:true });
+
+  function openSuggestions(){
+    positionSuggestDropdown();
+    $("suggestDropdown").classList.add("open");
+  }
   function closeSuggestions(){ $("suggestDropdown").classList.remove("open"); }
 
   function renderSuggestions(){
@@ -468,7 +480,6 @@
         '<button type="button" class="suggest-item" data-id="' + e.id + '">' +
           '<span class="sw">' + escapeHtml(e.word) + '</span>' +
           (e.category ? '<span class="sc">' + escapeHtml(e.category) + '</span>' : '') +
-          '<div class="sm">' + escapeHtml(truncateText(e.meaning, 70)) + '</div>' +
         '</button>'
       ).join("");
       if(list.length > top.length){
