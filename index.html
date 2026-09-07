@@ -3,607 +3,339 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>විෂයානුබද්ධ වාග්මාලාව</title>
+<title>විෂයානුබද්ධ වාග් මාලාව</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;600;700;800&family=Noto+Serif+Sinhala:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#16302B;
-    --ink-deep:#0E211D;
-    --gold:#C89B3C;
-    --gold-soft:#DDBE73;
-    --parchment:#F4EEDE;
-    --parchment-raised:#FBF8EF;
-    --clay:#8C4A32;
-    --text:#201C13;
-    --text-soft:#645C48;
-    --line:#E1D8BF;
+    --forest-900:#0f2e21;
+    --forest-800:#163d2c;
+    --forest-700:#1b4332;
+    --forest-600:#2d6a4f;
+    --mint-300:#95d5b2;
+    --mint-200:#b7e4c7;
+    --mint-100:#d9f2e4;
+    --paper:#f4faf6;
+    --paper-2:#ffffff;
+    --ink:#12231a;
+    --ink-soft:#3f5c4c;
+    --shadow:0 10px 30px rgba(15,46,33,0.14);
   }
   *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
+  html,body{margin:0;padding:0; min-height:100%;}
   body{
-    margin:0;
-    background:var(--parchment);
-    color:var(--text);
-    font-family: Georgia, "Noto Serif Sinhala", "Iskoola Pota", serif;
+    background:
+      radial-gradient(1200px 520px at 50% -12%, var(--mint-100) 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 100%, var(--mint-100) 0%, transparent 55%),
+      var(--paper);
+    font-family:'Noto Sans Sinhala', sans-serif;
+    color:var(--ink);
+    display:flex; flex-direction:column; min-height:100vh;
   }
-  .ui{ font-family: -apple-system,"Segoe UI","Noto Sans Sinhala","Iskoola Pota",sans-serif; }
+  h1,h2,.brand{font-family:'Noto Serif Sinhala', serif;}
 
-  /* ---------------- HERO ---------------- */
-  .hero{
-    background: radial-gradient(120% 160% at 15% 0%, #1D3B34 0%, var(--ink) 45%, var(--ink-deep) 100%);
-    color: var(--parchment-raised);
-    padding: 64px 24px 56px;
-    text-align:left;
+  header{
+    background:linear-gradient(120deg, var(--forest-900), var(--forest-700) 65%, var(--forest-600));
+    padding:54px 20px 70px;
+    text-align:center;
+    color:#fff;
     position:relative;
     overflow:hidden;
   }
-  .hero::after{
+  header::before{
     content:"";
-    position:absolute; right:-60px; top:-60px;
-    width:280px; height:280px; border-radius:50%;
-    background: radial-gradient(circle, rgba(200,155,60,0.22), transparent 70%);
+    position:absolute; left:-80px; top:-80px; width:260px; height:260px; border-radius:50%;
+    background:radial-gradient(circle, rgba(149,213,178,0.22), transparent 70%);
   }
-  .hero-inner{ max-width:760px; margin:0 auto; position:relative; }
-  .hero-eyebrow{
-    display:inline-block;
-    font-size:13px;
-    color: var(--gold-soft);
-    letter-spacing:0.3px;
-    margin-bottom:14px;
-    opacity:0;
-    animation: rise 0.6s ease forwards;
+  header::after{
+    content:"";
+    position:absolute; right:-60px; bottom:-100px; width:260px; height:260px; border-radius:50%;
+    background:radial-gradient(circle, rgba(183,228,199,0.18), transparent 70%);
   }
-  .hero h1{
-    font-size:44px;
-    line-height:1.15;
-    margin:0 0 12px;
-    font-weight:700;
-    opacity:0;
-    animation: rise 0.7s ease 0.08s forwards;
-  }
-  .hero p.lead{
-    font-size:16px;
-    color:#D9D3C0;
-    max-width:520px;
-    margin:0 0 30px;
-    opacity:0;
-    animation: rise 0.7s ease 0.16s forwards;
-  }
-  @keyframes rise{
-    from{ opacity:0; transform:translateY(10px); }
-    to{ opacity:1; transform:translateY(0); }
-  }
+  header h1{margin:0 0 10px; font-size:2.1rem; letter-spacing:.2px;}
+  header p{margin:0; color:var(--mint-200); font-size:1rem;}
+
+  main{flex:1; max-width:760px; width:100%; margin:0 auto; padding:0 20px;}
 
   .search-wrap{
+    margin-top:-38px;
+    background:var(--paper-2);
+    border-radius:18px;
+    box-shadow:var(--shadow);
+    border:1px solid var(--mint-200);
+    padding:12px;
     position:relative;
-    display:flex;
-    gap:10px;
-    max-width:560px;
-    opacity:0;
-    animation: rise 0.7s ease 0.24s forwards;
+    z-index:5;
   }
-  .search-wrap input[type=search]{
-    flex:1;
-    padding:14px 18px;
-    border-radius:999px;
-    border:1px solid rgba(244,238,222,0.25);
-    background:rgba(244,238,222,0.08);
-    color:var(--parchment-raised);
-    font-size:15px;
+  .search-row{display:flex; gap:10px;}
+  .search-row input{
+    flex:1; border:none; outline:none; padding:16px 18px; font-size:1.05rem;
+    font-family:inherit; color:var(--ink); background:transparent;
   }
-  .search-wrap input[type=search]::placeholder{ color:#B8B19B; }
-  .search-wrap input[type=search]:focus{
-    outline:none; border-color:var(--gold); background:rgba(244,238,222,0.13);
+  .search-row button{
+    background:var(--forest-700); color:#fff; border:none; padding:0 26px;
+    border-radius:12px; font-family:inherit; font-size:1rem; font-weight:600; cursor:pointer;
+    transition:.18s;
   }
-  .search-wrap button{
-    padding:0 22px;
-    border-radius:999px;
-    border:1px solid var(--gold);
-    background:var(--gold);
-    color:var(--ink-deep);
-    font-weight:700;
-    font-size:14px;
-    cursor:pointer;
-  }
-  .search-wrap button:hover{ background:var(--gold-soft); }
+  .search-row button:hover{background:var(--forest-600);}
 
-  .suggest-dropdown{
-    position:fixed;
-    background:#FFFFFF;
-    border-radius:10px;
-    box-shadow:0 16px 40px rgba(14,33,29,0.35);
-    display:none;
+  .suggestions{
+    position:relative;
+    background:var(--paper-2);
+    border-radius:0 0 14px 14px;
     overflow:hidden;
-    z-index:200;
-    opacity:0;
-    transform:translateY(-4px);
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    box-shadow:var(--shadow);
+    border:1px solid var(--mint-200);
+    border-top:none;
+    margin-top:-4px;
+    display:none;
   }
-  .suggest-dropdown.open{ display:block; opacity:1; transform:translateY(0); }
-  .suggest-list{ max-height:320px; overflow-y:auto; }
-  .suggest-item{
-    display:block;
-    width:100%;
-    padding:11px 16px;
-    border:none;
-    background:#FFFFFF;
-    border-bottom:1px solid #EAEAEA;
-    cursor:pointer;
-    text-align:left;
+  .suggestions.show{display:block;}
+  .suggestion-item{
+    padding:13px 20px; cursor:pointer; font-size:.98rem; color:var(--forest-800);
+    border-bottom:1px solid var(--mint-100); transition:.12s;
   }
-  .suggest-item:last-child{ border-bottom:none; }
-  .suggest-item:hover, .suggest-item.active{ background:#F2F2F2; }
-  .suggest-item .sw{ font-size:15px; font-weight:700; color:#1A1A1A; font-family:Georgia,"Noto Serif Sinhala",serif; }
-  .suggest-item .sc{ font-size:11px; color:#8A8A8A; margin-left:8px; }
-  .suggest-empty{ padding:16px; font-size:13px; color:#8A8A8A; text-align:center; background:#FFFFFF; }
-  .suggest-footer{
-    display:block;
-    width:100%;
-    padding:10px 16px;
-    border:none;
-    background:#F5F5F5;
-    color:#4A4A4A;
-    font-size:12.5px;
-    font-weight:600;
-    cursor:pointer;
-    text-align:center;
-  }
-  .suggest-footer:hover{ background:#E9E9E9; }
+  .suggestion-item:last-child{border-bottom:none;}
+  .suggestion-item:hover, .suggestion-item.active{background:var(--mint-100);}
+  .suggestion-item b{color:var(--forest-900);}
 
-  .stats-line{
-    margin-top:22px;
-    font-size:13px;
-    color:#B8B19B;
-    display:flex;
-    gap:18px;
-    flex-wrap:wrap;
-    opacity:0;
-    animation: rise 0.7s ease 0.3s forwards;
-  }
-  .stats-line b{ color:var(--gold-soft); font-weight:700; }
+  .hint{text-align:center; color:var(--ink-soft); font-size:.88rem; margin:22px 0 40px;}
 
-  /* ---------------- MAIN ---------------- */
-  main{ max-width:1040px; margin:0 auto; padding:36px 24px 90px; }
-
-  .controls-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:16px;
-    flex-wrap:wrap;
-    margin-bottom:20px;
-  }
-  .chip-row{ display:flex; gap:8px; flex-wrap:wrap; }
+  .recent-title{font-size:1rem; color:var(--forest-800); margin:0 0 12px; font-weight:700;}
+  .chip-row{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:50px;}
   .chip{
-    font-size:13px;
-    padding:7px 16px;
-    border-radius:999px;
-    border:1px solid var(--line);
-    background:var(--parchment-raised);
-    color:var(--text-soft);
-    cursor:pointer;
-    transition: all 0.15s ease;
+    background:var(--mint-100); color:var(--forest-700); padding:8px 16px; border-radius:999px;
+    font-size:.88rem; cursor:pointer; border:1px solid var(--mint-200); transition:.15s;
   }
-  .chip:hover{ border-color:var(--gold); color:var(--text); }
-  .chip.active{ background:var(--ink); color:var(--parchment-raised); border-color:var(--ink); }
-
-  .random-btn{
-    font-size:13px;
-    padding:8px 16px;
-    border-radius:999px;
-    border:1px solid var(--clay);
-    background:transparent;
-    color:var(--clay);
-    cursor:pointer;
-    white-space:nowrap;
-  }
-  .random-btn:hover{ background:var(--clay); color:#fff; }
-
-  .result-count{ font-size:13px; color:var(--text-soft); margin: 0 0 16px; }
-
-  .card-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(270px, 1fr));
-    gap:16px;
-  }
-
-  .word-card{
-    background:var(--parchment-raised);
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:20px 22px;
-    position:relative;
-    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-  }
-  .word-card::before{
-    content:"";
-    position:absolute; left:0; top:14px; bottom:14px; width:3px;
-    background:var(--gold); border-radius:2px;
-  }
-  .word-card:hover{
-    transform:translateY(-2px);
-    box-shadow:0 10px 24px rgba(22,48,43,0.10);
-    border-color:var(--gold-soft);
-  }
-  .word-card.highlight{
-    border-color:var(--gold); box-shadow:0 0 0 3px rgba(200,155,60,0.25);
-  }
-  .word-card .cat{
-    display:inline-block;
-    font-size:11px;
-    color:var(--clay);
-    background:rgba(140,74,50,0.08);
-    padding:2px 10px;
-    border-radius:999px;
-    margin-bottom:10px;
-  }
-  .word-card .w{ font-size:21px; font-weight:700; margin:0 0 6px; color:var(--ink); }
-  .word-card .m{ font-size:14.5px; margin:0 0 8px; line-height:1.55; }
-  .word-card .s{ font-size:13px; color:var(--text-soft); margin:0 0 10px; line-height:1.5; }
-  .word-card .alt{
-    font-size:12px; color:var(--text-soft); margin-bottom:8px;
-  }
-  .word-card .alt b{ color:var(--text); font-weight:600; }
-  .word-card .src{
-    font-size:11.5px; color:var(--text-soft);
-    border-top:1px dashed var(--line);
-    padding-top:8px; margin-top:2px;
-  }
-
-  .empty, .loading, .error-box{
-    text-align:center;
-    padding:60px 20px;
-    color:var(--text-soft);
-    font-size:14.5px;
-  }
-  .error-box{ color:var(--clay); }
+  .chip:hover{background:var(--mint-200);}
 
   footer{
-    text-align:center;
-    padding:26px;
-    font-size:12px;
-    color:var(--text-soft);
-    border-top:1px solid var(--line);
+    text-align:center; padding:26px 20px; color:var(--forest-700); font-size:.85rem;
+    background:var(--mint-100); border-top:1px solid var(--mint-200); margin-top:auto;
   }
 
-  /* ---------------- SEARCH OVERLAY ---------------- */
+  /* popup */
   .overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(14,33,29,0.55);
-    backdrop-filter: blur(2px);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:24px;
-    z-index:50;
+    display:none; position:fixed; inset:0; background:rgba(15,46,33,0.6);
+    align-items:center; justify-content:center; z-index:200; padding:20px;
+    backdrop-filter:blur(3px);
   }
-  .overlay.open{ display:flex; }
-  .overlay-panel{
-    background:var(--parchment-raised);
-    border-radius:14px;
-    width:100%;
-    max-width:680px;
-    max-height:78vh;
-    display:flex;
-    flex-direction:column;
-    box-shadow:0 24px 60px rgba(14,33,29,0.35);
-    opacity:0;
-    transform:translateY(8px) scale(0.98);
-    animation: panelIn 0.22s ease forwards;
+  .overlay.show{display:flex;}
+  .popup{
+    background:var(--paper-2); border-radius:20px; max-width:560px; width:100%;
+    box-shadow:0 24px 70px rgba(15,46,33,0.35); overflow:hidden;
+    animation:pop .18s ease-out;
   }
-  @keyframes panelIn{
-    to{ opacity:1; transform:translateY(0) scale(1); }
+  @keyframes pop{ from{transform:scale(.94); opacity:0;} to{transform:scale(1); opacity:1;} }
+  .popup-head{
+    background:linear-gradient(120deg, var(--forest-800), var(--forest-600));
+    color:#fff; padding:24px 28px; position:relative;
   }
-  .overlay-head{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:16px 22px;
-    border-bottom:1px solid var(--line);
-    flex-shrink:0;
+  .popup-head h2{margin:0; font-size:1.5rem;}
+  .popup-head .cat{
+    display:inline-block; margin-top:8px; background:rgba(255,255,255,0.16);
+    border:1px solid rgba(255,255,255,0.3); padding:3px 13px; border-radius:999px; font-size:.78rem;
   }
-  .overlay-head .oh-title{ font-size:14px; color:var(--text-soft); }
-  .overlay-head .oh-close{
-    border:none; background:transparent; cursor:pointer;
-    font-size:20px; line-height:1; color:var(--text-soft); padding:4px 8px; border-radius:6px;
+  .popup-close{
+    position:absolute; top:16px; right:18px; background:transparent; border:none; color:#fff;
+    font-size:1.4rem; cursor:pointer; line-height:1; opacity:.85;
   }
-  .overlay-head .oh-close:hover{ background:var(--parchment); color:var(--text); }
-  .overlay-body{
-    overflow-y:auto;
-    padding:18px 22px 22px;
+  .popup-close:hover{opacity:1;}
+  .popup-body{padding:24px 28px 8px;}
+  .popup-field{margin-bottom:18px;}
+  .popup-field label{display:block; font-size:.78rem; font-weight:700; color:var(--forest-700); margin-bottom:5px; text-transform:none;}
+  .popup-field p{margin:0; color:var(--ink); line-height:1.7; font-size:.98rem;}
+  .popup-footer{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:16px 28px 22px; border-top:1px solid var(--mint-100); margin-top:6px;
   }
-  .overlay .card-grid{ grid-template-columns:1fr; gap:12px; }
-  .overlay .word-card:hover{ transform:none; }
-
-  @media (max-width:520px){
-    .hero{ padding:48px 18px 44px; }
-    .hero h1{ font-size:32px; }
-    .search-wrap{ flex-direction:column; }
-    .search-wrap button{ padding:12px; }
-  }
+  .author-tag{font-size:.85rem; color:var(--ink-soft);}
+  .author-tag b{color:var(--forest-700);}
+  .no-result{padding:40px 28px; text-align:center; color:var(--ink-soft);}
 </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-  <div class="hero">
-    <div class="hero-inner">
-      <span class="hero-eyebrow ui">කලාපීය ගුරු එකමුතුව-කොළඹ</span>
-      <h1>විෂයානුබද්ධ වාග් මාලාව</h1>
-      <p class="lead ui">විෂයානුබද්ධ වචන, ඒවායේ අර්ථ සහ මූලාශ්‍ර එකම තැනකින් සොයාගන්න.</p>
-      <div class="search-wrap">
-        <input class="ui" type="search" id="searchInput" placeholder="වචනයක් හෝ අර්ථයක් ටයිප් කරන්න...">
-        <button class="ui" id="randomBtn" type="button">අහඹු වචනයක්</button>
-      </div>
-      <div class="suggest-dropdown ui" id="suggestDropdown">
-        <div class="suggest-list" id="suggestList"></div>
-      </div>
-      <div class="stats-line ui" id="statsLine"></div>
+<header>
+  <h1>විෂයානුබද්ධ වාග් මාලාව</h1>
+  <p>විෂය ආශ්‍රිත වචන සහ ඒවායේ අර්ථ විස්තර සොයන්න</p>
+</header>
+
+<main>
+  <div class="search-wrap">
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="වචනයක් ටයිප් කරන්න..." autocomplete="off">
+      <button id="searchBtn">සොයන්න</button>
     </div>
   </div>
+  <div class="suggestions" id="suggestions"></div>
 
-  <div class="overlay" id="searchOverlay">
-    <div class="overlay-panel">
-      <div class="overlay-head">
-        <span class="oh-title ui" id="overlayCount"></span>
-        <button class="oh-close ui" id="overlayClose" type="button" aria-label="වසන්න">&times;</button>
-      </div>
-      <div class="overlay-body" id="overlayBody"></div>
-    </div>
-  </div>
+  <p class="hint">යතුරු ලියනය කරන විට ආසන්නතම යෝජනා පහත දිස්වේ. සම්පූර්ණ විස්තරය බැලීමට ප්‍රතිඵලයක් ක්ලික් කරන්න.</p>
+</main>
 
-  <main>
-    <div class="controls-row">
-      <div class="chip-row ui" id="categoryChips"></div>
-    </div>
-    <p class="result-count ui" id="resultCount"></p>
-    <div id="listArea"><div class="loading ui">පූරණය වෙමින්...</div></div>
-  </main>
+<footer>කලාපීය ගුරු සහයෝගීතාව</footer>
 
-  <footer class="ui">වචන කෝෂය</footer>
+<!-- Result popup -->
+<div class="overlay" id="popupOverlay">
+  <div class="popup" id="popupContent"></div>
+</div>
 
 <script>
-(function(){
-  const SUPABASE_URL = "https://uqgzlaxsnknheoerbfus.supabase.co/rest/v1/";
-  const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxZ3psYXhzbmtuaGVvZXJiZnVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MjM2MTUsImV4cCI6MjA3OTI4MzYxNX0.IYWZ7ukx8J-GJMWy7cMk2BWnmzJmJjjE93yEmJie7nQ";
-  const TABLE = "word_aliases";
+const SUPABASE_URL = "https://uqgzlaxsnknheoerbfus.supabase.co";
+const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxZ3psYXhzbmtuaGVvZXJiZnVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MjM2MTUsImV4cCI6MjA3OTI4MzYxNX0.IYWZ7ukx8J-GJMWy7cMk2BWnmzJmJjjE93yEmJie7nQ";
+const REST = `${SUPABASE_URL}/rest/v1`;
+const HEADERS = { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` };
 
-  let entries = [];
-  let activeCategory = "";
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("keydown", e => { if (e.key === "F12") e.preventDefault(); });
 
-  const $ = (id) => document.getElementById(id);
+function escapeHtml(str){
+  return String(str ?? "").replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[m]));
+}
 
-  function escapeHtml(s){
-    return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[c]));
+const input = document.getElementById("searchInput");
+const suggBox = document.getElementById("suggestions");
+let debounceTimer = null;
+let activeIndex = -1;
+let currentSuggestions = [];
+
+input.addEventListener("input", () => {
+  clearTimeout(debounceTimer);
+  const q = input.value.trim();
+  activeIndex = -1;
+  if (q.length < 1){
+    suggBox.classList.remove("show");
+    suggBox.innerHTML = "";
+    return;
   }
+  debounceTimer = setTimeout(() => fetchSuggestions(q), 220);
+});
 
-  async function loadEntries(){
-    try{
-      const res = await fetch(
-        SUPABASE_URL + TABLE + "?select=*&status=eq.published&order=created_at.desc&limit=2000",
-        { headers: { "apikey": ANON_KEY, "Authorization": "Bearer " + ANON_KEY } }
-      );
-      if(!res.ok) throw new Error(await res.text());
-      entries = await res.json();
-      renderStats();
-      renderCategoryChips();
-      renderList();
-    }catch(e){
-      $("listArea").innerHTML = '<div class="error-box ui">වචන ලබාගැනීමට නොහැකි විය: ' + escapeHtml(e.message) + '</div>';
-    }
-  }
-
-  function distinctCategories(){
-    const set = new Set();
-    entries.forEach(e => { if(e.category) set.add(e.category); });
-    return Array.from(set).sort();
-  }
-
-  function renderStats(){
-    const cats = distinctCategories().length;
-    $("statsLine").innerHTML =
-      '<span><b>' + entries.length + '</b> වචන</span>' +
-      '<span><b>' + cats + '</b> categories</span>';
-  }
-
-  function renderCategoryChips(){
-    const cats = distinctCategories();
-    let html = '<button class="chip'+(activeCategory===""?" active":"")+'" data-cat="">සියල්ල</button>';
-    cats.forEach(c => {
-      html += '<button class="chip'+(activeCategory===c?" active":"")+'" data-cat="'+escapeHtml(c)+'">'+escapeHtml(c)+'</button>';
-    });
-    $("categoryChips").innerHTML = html;
-  }
-
-  $("categoryChips").addEventListener("click", (ev) => {
-    const btn = ev.target.closest("button[data-cat]");
-    if(!btn) return;
-    activeCategory = btn.getAttribute("data-cat");
-    renderCategoryChips();
-    renderList();
-  });
-
-  $("searchInput").addEventListener("input", () => {
-    renderSuggestions();
-  });
-
-  $("searchInput").addEventListener("keydown", (ev) => {
-    if(ev.key === "Enter"){
-      ev.preventDefault();
-      closeSuggestions();
-      renderOverlay();
-    }
-    if(ev.key === "Escape"){
-      $("searchInput").value = "";
-      closeSuggestions();
-      closeOverlay();
-    }
-  });
-
-  document.addEventListener("click", (ev) => {
-    if(!ev.target.closest(".search-wrap") && !ev.target.closest(".suggest-dropdown")){
-      closeSuggestions();
-    }
-  });
-
-  function positionSuggestDropdown(){
-    const rect = $("searchInput").closest(".search-wrap").getBoundingClientRect();
-    const dd = $("suggestDropdown");
-    dd.style.top = (rect.bottom + 8) + "px";
-    dd.style.left = rect.left + "px";
-    dd.style.width = rect.width + "px";
-  }
-  window.addEventListener("resize", () => {
-    if($("suggestDropdown").classList.contains("open")) positionSuggestDropdown();
-  });
-  window.addEventListener("scroll", () => {
-    if($("suggestDropdown").classList.contains("open")) positionSuggestDropdown();
-  }, { passive:true });
-
-  function openSuggestions(){
-    positionSuggestDropdown();
-    $("suggestDropdown").classList.add("open");
-  }
-  function closeSuggestions(){ $("suggestDropdown").classList.remove("open"); }
-
-  function renderSuggestions(){
-    const q = $("searchInput").value.trim();
-    if(!q){ closeSuggestions(); return; }
-    const list = filtered();
-    const top = list.slice(0, 7);
-    let html = "";
-    if(top.length === 0){
-      html = '<div class="suggest-empty">"' + escapeHtml(q) + '" සඳහා ගැලපෙන වචන හමු නොවීය.</div>';
+input.addEventListener("keydown", (e) => {
+  const items = suggBox.querySelectorAll(".suggestion-item");
+  if (e.key === "ArrowDown"){
+    e.preventDefault();
+    activeIndex = Math.min(activeIndex + 1, items.length - 1);
+    updateActive(items);
+  } else if (e.key === "ArrowUp"){
+    e.preventDefault();
+    activeIndex = Math.max(activeIndex - 1, 0);
+    updateActive(items);
+  } else if (e.key === "Enter"){
+    if (activeIndex >= 0 && currentSuggestions[activeIndex]){
+      openResult(currentSuggestions[activeIndex].id);
     } else {
-      html = top.map(e =>
-        '<button type="button" class="suggest-item" data-id="' + e.id + '">' +
-          '<span class="sw">' + escapeHtml(e.word) + '</span>' +
-          (e.category ? '<span class="sc">' + escapeHtml(e.category) + '</span>' : '') +
-        '</button>'
-      ).join("");
-      if(list.length > top.length){
-        html += '<button type="button" class="suggest-footer" id="suggestSeeAll">සියලුම ප්‍රතිඵල බලන්න (' + list.length + ')</button>';
-      }
+      runSearch(input.value.trim());
     }
-    $("suggestList").innerHTML = html;
-    openSuggestions();
-
-    $("suggestList").querySelectorAll(".suggest-item").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const id = btn.getAttribute("data-id");
-        const entry = entries.find(e => String(e.id) === String(id));
-        closeSuggestions();
-        if(entry) openSingle(entry);
-      });
-    });
-    const seeAll = $("suggestSeeAll");
-    if(seeAll){
-      seeAll.addEventListener("click", () => {
-        closeSuggestions();
-        renderOverlay();
-      });
-    }
+  } else if (e.key === "Escape"){
+    suggBox.classList.remove("show");
   }
+});
 
-  function truncateText(s, n){
-    s = s || "";
-    return s.length > n ? s.slice(0, n) + "…" : s;
-  }
+function updateActive(items){
+  items.forEach((it, idx) => it.classList.toggle("active", idx === activeIndex));
+}
 
-  function openOverlay(){ $("searchOverlay").classList.add("open"); }
-  function closeOverlay(){ $("searchOverlay").classList.remove("open"); }
-
-  function openSingle(entry){
-    $("overlayCount").textContent = "";
-    $("overlayBody").innerHTML = '<div class="card-grid">' + cardHtml(entry) + '</div>';
-    openOverlay();
-  }
-
-  function renderOverlay(){
-    const q = $("searchInput").value.trim();
-    if(!q){ closeOverlay(); return; }
-    const list = filtered();
-    $("overlayCount").textContent = list.length ? (list.length + " ප්‍රතිඵල") : "ප්‍රතිඵල නැත";
-    $("overlayBody").innerHTML = list.length
-      ? '<div class="card-grid">' + list.map(cardHtml).join("") + '</div>'
-      : '<div class="empty ui">"' + escapeHtml(q) + '" සඳහා ගැලපෙන වචන හමු නොවීය.</div>';
-    openOverlay();
-  }
-
-  $("overlayClose").addEventListener("click", () => {
-    $("searchInput").value = "";
-    closeOverlay();
-    closeSuggestions();
-  });
-  $("searchOverlay").addEventListener("click", (ev) => {
-    if(ev.target.id === "searchOverlay"){
-      $("searchInput").value = "";
-      closeOverlay();
-      closeSuggestions();
-    }
-  });
-  document.addEventListener("keydown", (ev) => {
-    if(ev.key === "Escape" && $("searchOverlay").classList.contains("open")){
-      $("searchInput").value = "";
-      closeOverlay();
-    }
-  });
-
-  function filtered(){
-    const q = $("searchInput").value.trim().toLowerCase();
-    return entries.filter(e => {
-      if(activeCategory && e.category !== activeCategory) return false;
-      if(q){
-        const hay = ((e.word||"") + " " + (e.meaning||"") + " " + (e.summary||"") + " " + (e.alternatives||"")).toLowerCase();
-        if(!hay.includes(q)) return false;
-      }
-      return true;
-    });
-  }
-
-  function cardHtml(e){
-    let html = '<div class="word-card" id="card-' + e.id + '">';
-    if(e.category) html += '<span class="cat ui">' + escapeHtml(e.category) + '</span>';
-    html += '<p class="w">' + escapeHtml(e.word) + '</p>';
-    html += '<p class="m">' + escapeHtml(e.meaning) + '</p>';
-    if(e.summary) html += '<p class="s ui">' + escapeHtml(e.summary) + '</p>';
-    if(e.alternatives) html += '<p class="alt ui"><b>විකල්ප:</b> ' + escapeHtml(e.alternatives) + '</p>';
-    if(e.source) html += '<p class="src ui">මූලාශ්‍රය: ' + escapeHtml(e.source) + '</p>';
-    html += '</div>';
-    return html;
-  }
-
-  function renderList(){
-    const list = filtered();
-    $("resultCount").textContent = list.length ? (list.length + " ප්‍රතිඵල") : "";
-    if(list.length === 0){
-      $("listArea").innerHTML = '<div class="empty ui">ගැලපෙන වචන හමු නොවීය. වෙනත් වචනයක් උත්සාහ කරන්න.</div>';
+async function fetchSuggestions(q){
+  try{
+    const res = await fetch(`${REST}/word_aliases?word=ilike.*${encodeURIComponent(q)}*&status=eq.published&select=id,word,category&order=word.asc&limit=6`, { headers: HEADERS });
+    const rows = await res.json();
+    currentSuggestions = rows;
+    if (rows.length === 0){
+      suggBox.innerHTML = `<div class="suggestion-item" style="cursor:default; color:var(--ink-soft);">ගැලපෙන ප්‍රතිඵල හමු නොවීය</div>`;
+      suggBox.classList.add("show");
       return;
     }
-    $("listArea").innerHTML = '<div class="card-grid">' + list.map(cardHtml).join("") + '</div>';
-  }
-
-  $("randomBtn").addEventListener("click", () => {
-    $("searchInput").value = "";
-    closeOverlay();
-    closeSuggestions();
-    const list = filtered();
-    if(list.length === 0) return;
-    const pick = list[Math.floor(Math.random() * list.length)];
-    renderList();
-    requestAnimationFrame(() => {
-      const el = $("card-" + pick.id);
-      if(el){
-        el.scrollIntoView({ behavior:"smooth", block:"center" });
-        el.classList.add("highlight");
-        setTimeout(() => el.classList.remove("highlight"), 1600);
-      }
+    suggBox.innerHTML = rows.map((r, idx) => `
+      <div class="suggestion-item" data-id="${r.id}">
+        <b>${escapeHtml(r.word)}</b>${r.category ? ` <span style="color:var(--ink-soft); font-size:.85rem;">— ${escapeHtml(r.category)}</span>` : ""}
+      </div>`).join("");
+    suggBox.classList.add("show");
+    suggBox.querySelectorAll(".suggestion-item[data-id]").forEach(el => {
+      el.addEventListener("click", () => openResult(el.dataset.id));
     });
-  });
+  } catch(e){
+    suggBox.classList.remove("show");
+  }
+}
 
-  loadEntries();
-})();
+document.getElementById("searchBtn").addEventListener("click", () => runSearch(input.value.trim()));
+
+async function runSearch(q){
+  if (!q) return;
+  suggBox.classList.remove("show");
+  try{
+    const res = await fetch(`${REST}/word_aliases?word=ilike.*${encodeURIComponent(q)}*&status=eq.published&select=*&order=word.asc&limit=1`, { headers: HEADERS });
+    const rows = await res.json();
+    if (rows.length === 0){
+      showPopupNoResult(q);
+    } else {
+      renderPopup(rows[0]);
+    }
+  } catch(e){
+    showPopupNoResult(q);
+  }
+}
+
+async function openResult(id){
+  suggBox.classList.remove("show");
+  try{
+    const res = await fetch(`${REST}/word_aliases?id=eq.${id}&status=eq.published&select=*`, { headers: HEADERS });
+    const rows = await res.json();
+    if (rows.length) renderPopup(rows[0]);
+  } catch(e){}
+}
+
+function renderPopup(r){
+  const content = document.getElementById("popupContent");
+  content.innerHTML = `
+    <div class="popup-head">
+      <button class="popup-close" id="closePopup">&times;</button>
+      <h2>${escapeHtml(r.word)}</h2>
+      ${r.category ? `<span class="cat">${escapeHtml(r.category)}</span>` : ""}
+    </div>
+    <div class="popup-body">
+      <div class="popup-field">
+        <label>අර්ථ විස්තරය</label>
+        <p>${escapeHtml(r.meaning || "-")}</p>
+      </div>
+      ${r.summary ? `<div class="popup-field"><label>සාරාංශය</label><p>${escapeHtml(r.summary)}</p></div>` : ""}
+      ${r.source ? `<div class="popup-field"><label>මූලාශ්‍රය</label><p>${escapeHtml(r.source)}</p></div>` : ""}
+    </div>
+    <div class="popup-footer">
+      <span class="author-tag">ඇතුළත් කළේ: <b>${escapeHtml(r.author || "නොදන්නා")}</b></span>
+    </div>`;
+  document.getElementById("popupOverlay").classList.add("show");
+  document.getElementById("closePopup").addEventListener("click", closePopup);
+}
+
+function showPopupNoResult(q){
+  const content = document.getElementById("popupContent");
+  content.innerHTML = `
+    <div class="popup-head">
+      <button class="popup-close" id="closePopup">&times;</button>
+      <h2>ප්‍රතිඵල හමු නොවීය</h2>
+    </div>
+    <div class="no-result">"${escapeHtml(q)}" සඳහා ගැලපෙන කිසිදු වචනයක් හමු නොවීය.</div>`;
+  document.getElementById("popupOverlay").classList.add("show");
+  document.getElementById("closePopup").addEventListener("click", closePopup);
+}
+
+function closePopup(){
+  document.getElementById("popupOverlay").classList.remove("show");
+}
+document.getElementById("popupOverlay").addEventListener("click", (e) => {
+  if (e.target.id === "popupOverlay") closePopup();
+});
+
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".search-wrap") && !e.target.closest(".suggestions")){
+    suggBox.classList.remove("show");
+  }
+});
 </script>
 </body>
 </html>
