@@ -201,6 +201,35 @@ const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const REST = `${SUPABASE_URL}/rest/v1`;
 const HEADERS = { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` };
 
+/*
+  Two data sources are merged in every search:
+  1) word_aliases   -> has: word, category, meaning, summary, source, author, status(published/draft)
+  2) learnX_pedia    -> has: word, meaning, slug   (no status/category/author fields)
+
+  NOTE: If your real Supabase table name is different from "learnX_pedia"
+  (for example it has a space, like "learnX pedia"), rename the `key`
+  value below to match exactly what appears in your Supabase "Table Editor".
+  PostgREST table names cannot contain spaces, so it is almost certainly
+  stored as learnX_pedia, learnxpedia, or similar — update the string below
+  once to match your project.
+*/
+const TABLES = [
+  {
+    key: "word_aliases",
+    label: "",
+    hasStatus: true,
+    suggestFields: "id,word,category,meaning",
+    fullFields: "*"
+  },
+  {
+    key: "learnX pedia",
+    label: "අමිල උඩවත්ත",
+    hasStatus: false,
+    suggestFields: "id,word,meaning,slug",
+    fullFields: "id,word,meaning,slug"
+  }
+];
+
 document.addEventListener("contextmenu", e => e.preventDefault());
 document.addEventListener("keydown", e => { if (e.key === "F12") e.preventDefault(); });
 
@@ -208,6 +237,28 @@ function escapeHtml(str){
   return String(str ?? "").replace(/[&<>"']/g, m => ({
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   }[m]));
+}
+
+function buildUrl(table, q, fields, limit){
+  let url = `${REST}/${table.key}?word=ilike.*${encodeURIComponent(q)}*&select=${fields}&order=word.asc&limit=${limit}`;
+  if (table.hasStatus) url += `&status=eq.published`;
+  return url;
+}
+
+async function fetchFromAllTables(q, fieldsKey, limitPerTable){
+  const requests = TABLES.map(async (t) => {
+    try{
+      const url = buildUrl(t, q, t[fieldsKey], limitPerTable);
+      const res = await fetch(url, { headers: HEADERS });
+      if (!res.ok) return [];
+      const rows = await res.json();
+      return rows.map(r => ({ ...r, _table: t.key, _label: t.label, _compositeId: `${t.key}::${r.id}` }));
+    } catch(e){
+      return [];
+    }
+  });
+  const results = await Promise.all(requests);
+  return results.flat();
 }
 
 const input = document.getElementById("searchInput");
@@ -229,7 +280,7 @@ input.addEventListener("input", () => {
 });
 
 input.addEventListener("keydown", (e) => {
-  const items = suggBox.querySelectorAll(".suggestion-item");
+  const items = suggBox.querySelectorAll(".suggestion-item[data-cid]");
   if (e.key === "ArrowDown"){
     e.preventDefault();
     activeIndex = Math.min(activeIndex + 1, items.length - 1);
@@ -240,7 +291,7 @@ input.addEventListener("keydown", (e) => {
     updateActive(items);
   } else if (e.key === "Enter"){
     if (activeIndex >= 0 && currentSuggestions[activeIndex]){
-      openResult(currentSuggestions[activeIndex].id);
+      openResult(currentSuggestions[activeIndex]._compositeId);
     } else {
       runSearch(input.value.trim());
     }
@@ -254,26 +305,27 @@ function updateActive(items){
 }
 
 async function fetchSuggestions(q){
-  try{
-    const res = await fetch(`${REST}/word_aliases?word=ilike.*${encodeURIComponent(q)}*&status=eq.published&select=id,word,category&order=word.asc&limit=6`, { headers: HEADERS });
-    const rows = await res.json();
-    currentSuggestions = rows;
-    if (rows.length === 0){
-      suggBox.innerHTML = `<div class="suggestion-item" style="cursor:default; color:var(--ink-soft);">ගැලපෙන ප්‍රතිඵල හමු නොවීය</div>`;
-      suggBox.classList.add("show");
-      return;
-    }
-    suggBox.innerHTML = rows.map((r, idx) => `
-      <div class="suggestion-item" data-id="${r.id}">
-        <b>${escapeHtml(r.word)}</b>${r.category ? ` <span style="color:var(--ink-soft); font-size:.85rem;">— ${escapeHtml(r.category)}</span>` : ""}
-      </div>`).join("");
+  const merged = await fetchFromAllTables(q, "suggestFields", 6);
+  merged.sort((a, b) => (a.word || "").localeCompare(b.word || "", "si"));
+  const rows = merged.slice(0, 6);
+  currentSuggestions = rows;
+
+  if (rows.length === 0){
+    suggBox.innerHTML = `<div class="suggestion-item" style="cursor:default; color:var(--ink-soft);">ගැලපෙන ප්‍රතිඵල හමු නොවීය</div>`;
     suggBox.classList.add("show");
-    suggBox.querySelectorAll(".suggestion-item[data-id]").forEach(el => {
-      el.addEventListener("click", () => openResult(el.dataset.id));
-    });
-  } catch(e){
-    suggBox.classList.remove("show");
+    return;
   }
+  suggBox.innerHTML = rows.map((r) => {
+    const tag = r.category || r._label || "";
+    return `
+      <div class="suggestion-item" data-cid="${r._compositeId}">
+        <b>${escapeHtml(r.word)}</b>${tag ? ` <span style="color:var(--ink-soft); font-size:.85rem;">— ${escapeHtml(tag)}</span>` : ""}
+      </div>`;
+  }).join("");
+  suggBox.classList.add("show");
+  suggBox.querySelectorAll(".suggestion-item[data-cid]").forEach(el => {
+    el.addEventListener("click", () => openResult(el.dataset.cid));
+  });
 }
 
 document.getElementById("searchBtn").addEventListener("click", () => runSearch(input.value.trim()));
@@ -281,46 +333,61 @@ document.getElementById("searchBtn").addEventListener("click", () => runSearch(i
 async function runSearch(q){
   if (!q) return;
   suggBox.classList.remove("show");
-  try{
-    const res = await fetch(`${REST}/word_aliases?word=ilike.*${encodeURIComponent(q)}*&status=eq.published&select=*&order=word.asc&limit=1`, { headers: HEADERS });
-    const rows = await res.json();
-    if (rows.length === 0){
-      showPopupNoResult(q);
-    } else {
-      renderPopup(rows[0]);
-    }
-  } catch(e){
+  const merged = await fetchFromAllTables(q, "fullFields", 1);
+  if (merged.length === 0){
     showPopupNoResult(q);
+    return;
   }
+  // Prefer an exact word match (case-insensitive) over a partial match,
+  // otherwise fall back to alphabetical order across both tables.
+  merged.sort((a, b) => {
+    const aExact = (a.word || "").toLowerCase() === q.toLowerCase() ? 0 : 1;
+    const bExact = (b.word || "").toLowerCase() === q.toLowerCase() ? 0 : 1;
+    if (aExact !== bExact) return aExact - bExact;
+    return (a.word || "").localeCompare(b.word || "", "si");
+  });
+  renderPopup(merged[0]);
 }
 
-async function openResult(id){
+async function openResult(compositeId){
   suggBox.classList.remove("show");
+  const [tableKey, id] = compositeId.split("::");
+  const table = TABLES.find(t => t.key === tableKey);
+  if (!table) return;
   try{
-    const res = await fetch(`${REST}/word_aliases?id=eq.${id}&status=eq.published&select=*`, { headers: HEADERS });
+    let url = `${REST}/${table.key}?id=eq.${id}&select=${table.fullFields}`;
+    if (table.hasStatus) url += `&status=eq.published`;
+    const res = await fetch(url, { headers: HEADERS });
     const rows = await res.json();
-    if (rows.length) renderPopup(rows[0]);
+    if (rows.length) renderPopup({ ...rows[0], _table: table.key, _label: table.label });
   } catch(e){}
 }
 
 function renderPopup(r){
   const content = document.getElementById("popupContent");
+  const categoryTag = r.category || r._label || "";
+
+  const fields = [];
+  fields.push({ label: "අර්ථ විස්තරය", value: r.meaning });
+  if (r.summary) fields.push({ label: "සාරාංශය", value: r.summary });
+  if (r.source) fields.push({ label: "මූලාශ්‍රය", value: r.source });
+  if (r.slug) fields.push({ label: "යොමු කේතය (Slug)", value: r.slug });
+
   content.innerHTML = `
     <div class="popup-head">
       <button class="popup-close" id="closePopup">&times;</button>
       <h2>${escapeHtml(r.word)}</h2>
-      ${r.category ? `<span class="cat">${escapeHtml(r.category)}</span>` : ""}
+      ${categoryTag ? `<span class="cat">${escapeHtml(categoryTag)}</span>` : ""}
     </div>
     <div class="popup-body">
-      <div class="popup-field">
-        <label>අර්ථ විස්තරය</label>
-        <p>${escapeHtml(r.meaning || "-")}</p>
-      </div>
-      ${r.summary ? `<div class="popup-field"><label>සාරාංශය</label><p>${escapeHtml(r.summary)}</p></div>` : ""}
-      ${r.source ? `<div class="popup-field"><label>මූලාශ්‍රය</label><p>${escapeHtml(r.source)}</p></div>` : ""}
+      ${fields.map(f => `
+        <div class="popup-field">
+          <label>${escapeHtml(f.label)}</label>
+          <p>${escapeHtml(f.value || "-")}</p>
+        </div>`).join("")}
     </div>
     <div class="popup-footer">
-      <span class="author-tag">ඇතුළත් කළේ: <b>${escapeHtml(r.author || "නොදන්නා")}</b></span>
+      <span class="author-tag">ඇතුළත් කළේ: <b>${escapeHtml(r.author || r._label || "නොදන්නා")}</b></span>
     </div>`;
   document.getElementById("popupOverlay").classList.add("show");
   document.getElementById("closePopup").addEventListener("click", closePopup);
