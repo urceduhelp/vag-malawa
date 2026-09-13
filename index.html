@@ -147,7 +147,7 @@
   }
   .popup-close:hover{opacity:1;}
   .popup-body{
-    padding:24px 28px 8px;
+    padding:24px 28px 22px;
     overflow-y:auto;
     flex:1 1 auto;
     min-height:0;
@@ -159,12 +159,17 @@
   .popup-field{margin-bottom:18px;}
   .popup-field label{display:block; font-size:.78rem; font-weight:700; color:var(--forest-700); margin-bottom:5px; text-transform:none;}
   .popup-field p{margin:0; color:var(--ink); line-height:1.7; font-size:.98rem;}
-  .popup-footer{
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
-    padding:16px 28px 22px; border-top:1px solid var(--mint-100);
-    flex-shrink:0; background:var(--paper-2);
+  .result-block + .result-block{margin-top:22px; padding-top:20px; border-top:1px dashed var(--mint-300);}
+  .result-ordinal{
+    display:inline-block; background:var(--mint-100); color:var(--forest-800);
+    font-size:.78rem; font-weight:700; padding:4px 13px; border-radius:999px; margin-bottom:14px;
   }
-  .author-tag{font-size:.85rem; color:var(--ink-soft);}
+  .result-cat{
+    display:inline-block; margin-bottom:14px; margin-left:8px;
+    background:var(--mint-100); color:var(--forest-700); border:1px solid var(--mint-200);
+    padding:3px 12px; border-radius:999px; font-size:.76rem;
+  }
+  .author-tag{font-size:.85rem; color:var(--ink-soft); display:block; margin-top:8px;}
   .author-tag b{color:var(--forest-700);}
   .no-result{padding:40px 28px; text-align:center; color:var(--ink-soft);}
 </style>
@@ -203,7 +208,8 @@ const HEADERS = { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` };
 
 /*
   Two data sources are merged in every search:
-  1) word_aliases   -> has: word, category, meaning, summary, source, author, status(published/draft)
+  1) word_aliases   -> has: word, category, meaning, source, author, status(published/draft)
+                        (the table may still have a "summary" column, but it is intentionally not displayed)
   2) learnX_pedia    -> has: word, meaning, slug   (no status/category/author fields)
 
   NOTE: If your real Supabase table name is different from "learnX_pedia"
@@ -229,6 +235,12 @@ const TABLES = [
     fullFields: "id,word,meaning,slug"
   }
 ];
+
+const ORDINAL_WORDS = ["පළමු","දෙවන","තෙවන","සිව්වන","පස්වන","හයවන","හත්වන","අටවන","නවවන","දහවන"];
+function ordinalLabel(idx){
+  if (idx < ORDINAL_WORDS.length) return `${ORDINAL_WORDS[idx]} ප්‍රතිඵලය`;
+  return `${idx + 1} වන ප්‍රතිඵලය`;
+}
 
 document.addEventListener("contextmenu", e => e.preventDefault());
 document.addEventListener("keydown", e => { if (e.key === "F12") e.preventDefault(); });
@@ -259,6 +271,34 @@ async function fetchFromAllTables(q, fieldsKey, limitPerTable){
   });
   const results = await Promise.all(requests);
   return results.flat();
+}
+
+// fetches every entry, across both tables, whose word matches exactly (case-insensitive)
+// this is what powers "more than one result for the same word -> show them all in one popup"
+async function fetchExactWordMatches(word){
+  const requests = TABLES.map(async (t) => {
+    try{
+      let url = `${REST}/${t.key}?word=ilike.${encodeURIComponent(word)}&select=${t.fullFields}&order=id.asc`;
+      if (t.hasStatus) url += `&status=eq.published`;
+      const res = await fetch(url, { headers: HEADERS });
+      if (!res.ok) return [];
+      const rows = await res.json();
+      return rows.map(r => ({ ...r, _table: t.key, _label: t.label }));
+    } catch(e){
+      return [];
+    }
+  });
+  const results = await Promise.all(requests);
+  return results.flat();
+}
+
+async function showWordPopup(word){
+  const matches = await fetchExactWordMatches(word);
+  if (matches.length === 0){
+    showPopupNoResult(word);
+    return;
+  }
+  renderPopup(matches);
 }
 
 const input = document.getElementById("searchInput");
@@ -333,7 +373,8 @@ document.getElementById("searchBtn").addEventListener("click", () => runSearch(i
 async function runSearch(q){
   if (!q) return;
   suggBox.classList.remove("show");
-  const merged = await fetchFromAllTables(q, "fullFields", 1);
+  // first, a broad partial search across both tables just to find the best-matching word text
+  const merged = await fetchFromAllTables(q, "fullFields", 5);
   if (merged.length === 0){
     showPopupNoResult(q);
     return;
@@ -346,48 +387,50 @@ async function runSearch(q){
     if (aExact !== bExact) return aExact - bExact;
     return (a.word || "").localeCompare(b.word || "", "si");
   });
-  renderPopup(merged[0]);
+  // now pull every entry (from either table) that shares that exact word,
+  // so duplicates are shown together in one popup instead of just the first hit
+  await showWordPopup(merged[0].word);
 }
 
 async function openResult(compositeId){
   suggBox.classList.remove("show");
-  const [tableKey, id] = compositeId.split("::");
-  const table = TABLES.find(t => t.key === tableKey);
-  if (!table) return;
-  try{
-    let url = `${REST}/${table.key}?id=eq.${id}&select=${table.fullFields}`;
-    if (table.hasStatus) url += `&status=eq.published`;
-    const res = await fetch(url, { headers: HEADERS });
-    const rows = await res.json();
-    if (rows.length) renderPopup({ ...rows[0], _table: table.key, _label: table.label });
-  } catch(e){}
+  const chosen = currentSuggestions.find(r => r._compositeId === compositeId);
+  if (!chosen || !chosen.word) return;
+  await showWordPopup(chosen.word);
 }
 
-function renderPopup(r){
+function renderPopup(rows){
   const content = document.getElementById("popupContent");
-  const categoryTag = r.category || r._label || "";
+  const word = rows[0].word;
+  const multiple = rows.length > 1;
 
-  const fields = [];
-  fields.push({ label: "අර්ථ විස්තරය", value: r.meaning });
-  if (r.summary) fields.push({ label: "සාරාංශය", value: r.summary });
-  if (r.source) fields.push({ label: "මූලාශ්‍රය", value: r.source });
-  if (r.slug) fields.push({ label: "යොමු කේතය (Slug)", value: r.slug });
+  const singleCat = !multiple ? (rows[0].category || rows[0]._label || "") : "";
 
   content.innerHTML = `
     <div class="popup-head">
       <button class="popup-close" id="closePopup">&times;</button>
-      <h2>${escapeHtml(r.word)}</h2>
-      ${categoryTag ? `<span class="cat">${escapeHtml(categoryTag)}</span>` : ""}
+      <h2>${escapeHtml(word)}</h2>
+      ${singleCat ? `<span class="cat">${escapeHtml(singleCat)}</span>` : ""}
     </div>
     <div class="popup-body">
-      ${fields.map(f => `
-        <div class="popup-field">
-          <label>${escapeHtml(f.label)}</label>
-          <p>${escapeHtml(f.value || "-")}</p>
-        </div>`).join("")}
-    </div>
-    <div class="popup-footer">
-      <span class="author-tag">ඇතුළත් කළේ: <b>${escapeHtml(r.author || r._label || "නොදන්නා")}</b></span>
+      ${rows.map((r, idx) => {
+        const catTag = multiple ? (r.category || r._label || "") : "";
+        const fields = [];
+        fields.push({ label: "අර්ථ විස්තරය", value: r.meaning });
+        if (r.source) fields.push({ label: "මූලාශ්‍රය", value: r.source });
+        if (r.slug) fields.push({ label: "යොමු කේතය (Slug)", value: r.slug });
+        return `
+          <div class="result-block">
+            ${multiple ? `<span class="result-ordinal">${ordinalLabel(idx)}</span>` : ""}
+            ${catTag ? `<span class="result-cat">${escapeHtml(catTag)}</span>` : ""}
+            ${fields.map(f => `
+              <div class="popup-field">
+                <label>${escapeHtml(f.label)}</label>
+                <p>${escapeHtml(f.value || "-")}</p>
+              </div>`).join("")}
+            <span class="author-tag">ඇතුළත් කළේ: <b>${escapeHtml(r.author || r._label || "නොදන්නා")}</b></span>
+          </div>`;
+      }).join("")}
     </div>`;
   document.getElementById("popupOverlay").classList.add("show");
   document.getElementById("closePopup").addEventListener("click", closePopup);
