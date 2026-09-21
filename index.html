@@ -201,38 +201,52 @@
 </div>
 
 <script>
-const SUPABASE_URL = "https://uqgzlaxsnknheoerbfus.supabase.co";
-const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxZ3psYXhzbmtuaGVvZXJiZnVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MjM2MTUsImV4cCI6MjA3OTI4MzYxNX0.IYWZ7ukx8J-GJMWy7cMk2BWnmzJmJjjE93yEmJie7nQ";
-const REST = `${SUPABASE_URL}/rest/v1`;
-const HEADERS = { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` };
+/*
+  Supabase projects (data sources).
+  Each project has its own URL + anon key, so every table below points to one of these.
+*/
+const SOURCES = {
+  main: {
+    rest: "https://uqgzlaxsnknheoerbfus.supabase.co/rest/v1",
+    key:  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVxZ3psYXhzbmtuaGVvZXJiZnVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MjM2MTUsImV4cCI6MjA3OTI4MzYxNX0.IYWZ7ukx8J-GJMWy7cMk2BWnmzJmJjjE93yEmJie7nQ"
+  },
+  words: {
+    rest: "https://jcijglwpkfluyzrltimk.supabase.co/rest/v1",
+    key:  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjaWpnbHdwa2ZsdXl6cmx0aW1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MzU3OTUsImV4cCI6MjA4MjQxMTc5NX0.dvT8OiyVEiYn_DhkMakmSq1Vvr4REDr0kYPnyqCtWHs"
+  }
+};
+
+function headersFor(src){
+  return { apikey: src.key, Authorization: `Bearer ${src.key}` };
+}
 
 /*
   Two data sources are merged in every search:
-  1) word_aliases   -> has: word, category, meaning, source, author, status(published/draft)
-                        (the table may still have a "summary" column, but it is intentionally not displayed)
-  2) learnX_pedia    -> has: word, meaning, slug   (no status/category/author fields)
-
-  NOTE: If your real Supabase table name is different from "learnX_pedia"
-  (for example it has a space, like "learnX pedia"), rename the `key`
-  value below to match exactly what appears in your Supabase "Table Editor".
-  PostgREST table names cannot contain spaces, so it is almost certainly
-  stored as learnX_pedia, learnxpedia, or similar — update the string below
-  once to match your project.
+  1) word_aliases  (project "main")
+       fields: word, category, meaning, source, author, status (published/draft)
+       (the table may still have a "summary" column, but it is intentionally not displayed)
+  2) words         (project "words")
+       fields: id, word, meaning, subject, created_at, updated_at
+       -> "subject" is shown as the category tag; there is no status / author column
 */
 const TABLES = [
   {
     key: "word_aliases",
+    src: "main",
     label: "",
+    defaultAuthor: "නොදන්නා",
     hasStatus: true,
     suggestFields: "id,word,category,meaning",
     fullFields: "*"
   },
   {
-    key: "learnX pedia",
-    label: "අමිල උඩවත්ත",
+    key: "words",
+    src: "words",
+    label: "",
+    defaultAuthor: "",
     hasStatus: false,
-    suggestFields: "id,word,meaning,slug",
-    fullFields: "id,word,meaning,slug"
+    suggestFields: "id,word,subject",
+    fullFields: "id,word,meaning,subject"
   }
 ];
 
@@ -240,6 +254,11 @@ const ORDINAL_WORDS = ["පළමු","දෙවන","තෙවන","සිව�
 function ordinalLabel(idx){
   if (idx < ORDINAL_WORDS.length) return `${ORDINAL_WORDS[idx]} ප්‍රතිඵලය`;
   return `${idx + 1} වන ප්‍රතිඵලය`;
+}
+
+// the small tag shown next to a word: category (word_aliases) or subject (words)
+function tagOf(r){
+  return r.category || r.subject || r._label || "";
 }
 
 document.addEventListener("contextmenu", e => e.preventDefault());
@@ -251,8 +270,11 @@ function escapeHtml(str){
   }[m]));
 }
 
+function restOf(table){ return SOURCES[table.src].rest; }
+function headersOf(table){ return headersFor(SOURCES[table.src]); }
+
 function buildUrl(table, q, fields, limit){
-  let url = `${REST}/${table.key}?word=ilike.*${encodeURIComponent(q)}*&select=${fields}&order=word.asc&limit=${limit}`;
+  let url = `${restOf(table)}/${table.key}?word=ilike.*${encodeURIComponent(q)}*&select=${fields}&order=word.asc&limit=${limit}`;
   if (table.hasStatus) url += `&status=eq.published`;
   return url;
 }
@@ -261,11 +283,15 @@ async function fetchFromAllTables(q, fieldsKey, limitPerTable){
   const requests = TABLES.map(async (t) => {
     try{
       const url = buildUrl(t, q, t[fieldsKey], limitPerTable);
-      const res = await fetch(url, { headers: HEADERS });
-      if (!res.ok) return [];
+      const res = await fetch(url, { headers: headersOf(t) });
+      if (!res.ok){
+        console.warn(`[${t.key}] request failed:`, res.status);
+        return [];
+      }
       const rows = await res.json();
-      return rows.map(r => ({ ...r, _table: t.key, _label: t.label, _compositeId: `${t.key}::${r.id}` }));
+      return rows.map(r => ({ ...r, _table: t.key, _label: t.label, _defaultAuthor: t.defaultAuthor, _compositeId: `${t.key}::${r.id}` }));
     } catch(e){
+      console.warn(`[${t.key}] request error:`, e);
       return [];
     }
   });
@@ -278,13 +304,17 @@ async function fetchFromAllTables(q, fieldsKey, limitPerTable){
 async function fetchExactWordMatches(word){
   const requests = TABLES.map(async (t) => {
     try{
-      let url = `${REST}/${t.key}?word=ilike.${encodeURIComponent(word)}&select=${t.fullFields}&order=id.asc`;
+      let url = `${restOf(t)}/${t.key}?word=ilike.${encodeURIComponent(word)}&select=${t.fullFields}&order=id.asc`;
       if (t.hasStatus) url += `&status=eq.published`;
-      const res = await fetch(url, { headers: HEADERS });
-      if (!res.ok) return [];
+      const res = await fetch(url, { headers: headersOf(t) });
+      if (!res.ok){
+        console.warn(`[${t.key}] request failed:`, res.status);
+        return [];
+      }
       const rows = await res.json();
-      return rows.map(r => ({ ...r, _table: t.key, _label: t.label }));
+      return rows.map(r => ({ ...r, _table: t.key, _label: t.label, _defaultAuthor: t.defaultAuthor }));
     } catch(e){
+      console.warn(`[${t.key}] request error:`, e);
       return [];
     }
   });
@@ -356,9 +386,9 @@ async function fetchSuggestions(q){
     return;
   }
   suggBox.innerHTML = rows.map((r) => {
-    const tag = r.category || r._label || "";
+    const tag = tagOf(r);
     return `
-      <div class="suggestion-item" data-cid="${r._compositeId}">
+      <div class="suggestion-item" data-cid="${escapeHtml(r._compositeId)}">
         <b>${escapeHtml(r.word)}</b>${tag ? ` <span style="color:var(--ink-soft); font-size:.85rem;">— ${escapeHtml(tag)}</span>` : ""}
       </div>`;
   }).join("");
@@ -404,7 +434,7 @@ function renderPopup(rows){
   const word = rows[0].word;
   const multiple = rows.length > 1;
 
-  const singleCat = !multiple ? (rows[0].category || rows[0]._label || "") : "";
+  const singleCat = !multiple ? tagOf(rows[0]) : "";
 
   content.innerHTML = `
     <div class="popup-head">
@@ -414,11 +444,11 @@ function renderPopup(rows){
     </div>
     <div class="popup-body">
       ${rows.map((r, idx) => {
-        const catTag = multiple ? (r.category || r._label || "") : "";
+        const catTag = multiple ? tagOf(r) : "";
         const fields = [];
         fields.push({ label: "අර්ථ විස්තරය", value: r.meaning });
         if (r.source) fields.push({ label: "මූලාශ්‍රය", value: r.source });
-        if (r.slug) fields.push({ label: "යොමු කේතය (Slug)", value: r.slug });
+        const authorName = r.author || r._label || r._defaultAuthor || "";
         return `
           <div class="result-block">
             ${multiple ? `<span class="result-ordinal">${ordinalLabel(idx)}</span>` : ""}
@@ -428,7 +458,7 @@ function renderPopup(rows){
                 <label>${escapeHtml(f.label)}</label>
                 <p>${escapeHtml(f.value || "-")}</p>
               </div>`).join("")}
-            <span class="author-tag">ඇතුළත් කළේ: <b>${escapeHtml(r.author || r._label || "නොදන්නා")}</b></span>
+            ${authorName ? `<span class="author-tag">ඇතුළත් කළේ: <b>${escapeHtml(authorName)}</b></span>` : ""}
           </div>`;
       }).join("")}
     </div>`;
